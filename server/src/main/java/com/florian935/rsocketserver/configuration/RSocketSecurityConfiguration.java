@@ -26,6 +26,7 @@ import static lombok.AccessLevel.PRIVATE;
 @FieldDefaults(level = PRIVATE, makeFinal = true)
 public class RSocketSecurityConfiguration {
 
+    static String GRAPHQL_ROUTE = "graphql";
     static String JWT_ROLE_NAME = "roles";
     static String ROLE_PREFIX = "ROLE_";
     ReactiveJwtDecoderImpl reactiveJwtDecoderImpl;
@@ -36,7 +37,8 @@ public class RSocketSecurityConfiguration {
         // See https://docs.spring.io/spring-security/site/docs/5.2.0.RELEASE/reference/html/rsocket.html
         return rSocketSecurity
                 .authorizePayload(authorize -> authorize
-                        .anyRequest().permitAll()
+                        .route(GRAPHQL_ROUTE).permitAll()
+                        .anyRequest().authenticated()
                         .anyExchange().permitAll()
                 )
                 .jwt(jwtSpec -> jwtSpec.authenticationManager(jwtReactiveAuthenticationManager()))
