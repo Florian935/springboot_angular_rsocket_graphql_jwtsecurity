@@ -1,0 +1,18 @@
+type Query {
+    productById(id: ID!): Product
+    authenticate: TokenResponse
+}
+
+type Subscription {
+    products(ids: [ID]!): Product
+}
+
+type Product {
+    id: ID
+    label: String
+    price: Int
+}
+
+type TokenResponse {
+    token: String!
+}

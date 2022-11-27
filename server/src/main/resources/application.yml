@@ -1,0 +1,11 @@
+spring:
+  graphql:
+    rsocket:
+      mapping: graphql
+  rsocket:
+    server:
+      port: 7000
+      transport: websocket
+server:
+  port: 8080
+
