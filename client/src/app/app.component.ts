@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { mergeMap, tap } from 'rxjs';
+import { map, mergeMap, tap } from 'rxjs';
 import { RsocketService } from './rsocket.service';
 
 @Component({
@@ -23,30 +23,6 @@ export class AppComponent implements OnInit {
             operationName: 'productById',
         });
 
-        const authenticate = JSON.stringify({
-            query: `query authenticate {
-                    authenticate {
-                        token
-                    }
-                }`,
-            variables: {},
-            operationName: 'authenticate',
-        });
-
-        this._rsocketService
-            .requestResponse(authenticate, 'graphql')
-            .pipe(
-                tap(console.log),
-                mergeMap((response: any) =>
-                    this._rsocketService.requestResponseJwt(
-                        productById,
-                        'graphql',
-                        response.data.authenticate.token
-                    )
-                )
-            )
-            .subscribe(console.log);
-
         const products = JSON.stringify({
             query: `subscription products($ids: [ID]!) {
                         products(ids: $ids) {
@@ -62,15 +38,34 @@ export class AppComponent implements OnInit {
             operationName: 'products',
         });
 
+        const authenticate = JSON.stringify({
+            query: `query authenticate {
+                    authenticate {
+                        token
+                    }
+                }`,
+            variables: {},
+            operationName: 'authenticate',
+        });
+
         this._rsocketService
             .requestResponse(authenticate, 'graphql')
             .pipe(
                 tap(console.log),
-                mergeMap((response: any) =>
+                map((response: any) => response.data.authenticate.token),
+                mergeMap((token: string) =>
+                    this._rsocketService
+                        .requestResponseJwt(productById, 'graphql', token)
+                        .pipe(
+                            tap(console.log),
+                            map(() => token)
+                        )
+                ),
+                mergeMap((token: string) =>
                     this._rsocketService.requestStreamJwt(
                         products,
                         'graphql',
-                        response.data.authenticate.token
+                        token
                     )
                 )
             )

@@ -26,6 +26,10 @@ import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 public class WebSecurityConfiguration {
 
     static String ALL_PATH = "/**";
+    static String GRAPHQL_PATH = "/graphql";
+    static String GRAPHIQL_PATH = "/graphiql/**";
+    static String PING_PATH = "/api/v1/ping";
+
 
     @Bean
     SecurityWebFilterChain springWebFilterChain(ServerHttpSecurity http) {
@@ -47,7 +51,10 @@ public class WebSecurityConfiguration {
     private void configureAuthorizeExchangeSpec(ServerHttpSecurity.AuthorizeExchangeSpec exchange) {
 
         exchange
-                .pathMatchers( ALL_PATH).authenticated()
+                .pathMatchers(HttpMethod.GET, GRAPHIQL_PATH).permitAll()
+                .pathMatchers(HttpMethod.POST, GRAPHQL_PATH).permitAll()
+                .pathMatchers(HttpMethod.GET, PING_PATH).permitAll()
+                .pathMatchers(ALL_PATH).authenticated()
                 .anyExchange().authenticated();
     }
 

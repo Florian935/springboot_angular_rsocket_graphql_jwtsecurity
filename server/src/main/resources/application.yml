@@ -1,5 +1,7 @@
 spring:
   graphql:
+    graphiql:
+      enabled: true
     rsocket:
       mapping: graphql
   rsocket:
