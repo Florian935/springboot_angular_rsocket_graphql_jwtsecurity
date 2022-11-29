@@ -2,12 +2,14 @@ import { Injectable } from '@angular/core';
 import { RxRequestersFactory } from 'rsocket-adapter-rxjs';
 import {
     encodeBearerAuthMetadata,
+    encodeCompositeMetadata,
+    encodeRoute,
     WellKnownMimeType,
 } from 'rsocket-composite-metadata';
 import { RSocket, RSocketConnector } from 'rsocket-core';
 import { RSocketRequester } from 'rsocket-messaging';
 import { WebsocketClientTransport } from 'rsocket-websocket-client';
-import { from, map, mergeMap, Observable, tap } from 'rxjs';
+import { catchError, from, map, mergeMap, Observable, of, tap } from 'rxjs';
 import { ModelCodec } from './model-codec';
 import { Product } from './product';
 import { StringCodec } from './string-codec';
@@ -20,6 +22,7 @@ export class RsocketService {
     private _modelCodec = new ModelCodec<Product>();
     private _rsocket$!: Observable<RSocket>;
     private _rsocketRequester$!: Observable<RSocketRequester>;
+    private _rsocket!: RSocket | null;
 
     constructor() {
         this._makeRSocketRequester();
@@ -28,6 +31,9 @@ export class RsocketService {
     private _makeRSocketRequester(): void {
         this._makeRSocket();
         this._rsocketRequester$ = this._rsocket$.pipe(
+            tap((rsocket: RSocket) => {
+                this._rsocket = rsocket;
+            }),
             map((rsocket: RSocket) => RSocketRequester.wrap(rsocket))
         );
     }
@@ -44,7 +50,13 @@ export class RsocketService {
             }),
             setup: {
                 payload: {
-                    data: null,
+                    data: Buffer.from('2a33f36d-da5d-4b84-9b63-fd868b84dfd8'),
+                    metadata: encodeCompositeMetadata([
+                        [
+                            WellKnownMimeType.MESSAGE_RSOCKET_ROUTING,
+                            encodeRoute('connect.setup'),
+                        ],
+                    ]),
                 },
                 dataMimeType: WellKnownMimeType.APPLICATION_JSON.toString(),
                 metadataMimeType:
@@ -131,5 +143,12 @@ export class RsocketService {
                     )
             )
         );
+    }
+
+    closeConnection(): void {
+        if (this._rsocket) {
+            this._rsocket.close();
+            this._rsocket = null;
+        }
     }
 }

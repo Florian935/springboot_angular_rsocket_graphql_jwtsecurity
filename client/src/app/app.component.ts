@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { map, mergeMap, tap } from 'rxjs';
 import { RsocketService } from './rsocket.service';
 
@@ -7,10 +7,14 @@ import { RsocketService } from './rsocket.service';
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.scss'],
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
     constructor(private readonly _rsocketService: RsocketService) {}
 
     ngOnInit(): void {
+        this.callRsocketResponder();
+    }
+
+    callRsocketResponder(): void {
         const productById = JSON.stringify({
             query: `query productById($id: ID!) {
                 productById(id: $id) {
@@ -69,6 +73,21 @@ export class AppComponent implements OnInit {
                     )
                 )
             )
-            .subscribe(console.log);
+            .subscribe({
+                next: console.log,
+                error: (error) => {
+                    this.closeConnection();
+                    console.log('BIG ERROR : ' + error);
+                },
+                complete: () => this.closeConnection(),
+            });
+    }
+
+    closeConnection(): void {
+        this._rsocketService.closeConnection();
+    }
+
+    ngOnDestroy(): void {
+        this.closeConnection();
     }
 }
