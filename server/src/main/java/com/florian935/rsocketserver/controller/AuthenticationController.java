@@ -12,6 +12,8 @@ import org.springframework.messaging.rsocket.annotation.ConnectMapping;
 import org.springframework.stereotype.Controller;
 import reactor.core.publisher.Mono;
 
+import java.util.Objects;
+
 import static lombok.AccessLevel.PRIVATE;
 
 @Controller
@@ -42,7 +44,8 @@ public class AuthenticationController {
                         "2a33f36d-da5d-4b84-9b63-fd868b84dfd8".equals(key)
                                 ? Mono.empty()
                                 : Mono.error(new RejectedSetupException("connection is not authenticated"))
-                );
+                )
+                ;
     }
 
     JwtTokenProvider jwtTokenProvider;

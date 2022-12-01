@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { map, mergeMap, tap } from 'rxjs';
+import { finalize, map, mergeMap, tap } from 'rxjs';
 import { RsocketService } from './rsocket.service';
 
 @Component({
@@ -71,16 +71,10 @@ export class AppComponent implements OnInit, OnDestroy {
                         'graphql',
                         token
                     )
-                )
+                ),
+                finalize(() => this.closeConnection())
             )
-            .subscribe({
-                next: console.log,
-                error: (error) => {
-                    this.closeConnection();
-                    console.log('BIG ERROR : ' + error);
-                },
-                complete: () => this.closeConnection(),
-            });
+            .subscribe(console.log);
     }
 
     closeConnection(): void {

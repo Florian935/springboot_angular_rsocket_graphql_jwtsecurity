@@ -9,7 +9,15 @@ import {
 import { RSocket, RSocketConnector } from 'rsocket-core';
 import { RSocketRequester } from 'rsocket-messaging';
 import { WebsocketClientTransport } from 'rsocket-websocket-client';
-import { catchError, from, map, mergeMap, Observable, of, tap } from 'rxjs';
+import {
+    catchError,
+    from,
+    map,
+    mergeMap,
+    Observable,
+    tap,
+    throwError,
+} from 'rxjs';
 import { ModelCodec } from './model-codec';
 import { Product } from './product';
 import { StringCodec } from './string-codec';
@@ -50,7 +58,7 @@ export class RsocketService {
             }),
             setup: {
                 payload: {
-                    data: Buffer.from('2a33f36d-da5d-4b84-9b63-fd868b84dfd8'),
+                    data: Buffer.from('2a33f36d-dad-4b84-9b63-fd868b84dfd8'),
                     metadata: encodeCompositeMetadata([
                         [
                             WellKnownMimeType.MESSAGE_RSOCKET_ROUTING,
@@ -58,6 +66,10 @@ export class RsocketService {
                         ],
                     ]),
                 },
+                // ms between sending keepalive to server
+                keepAlive: 60000,
+                // ms timeout if no keepalive response
+                lifetime: 180000,
                 dataMimeType: WellKnownMimeType.APPLICATION_JSON.toString(),
                 metadataMimeType:
                     WellKnownMimeType.MESSAGE_RSOCKET_COMPOSITE_METADATA.toString(),
@@ -85,6 +97,9 @@ export class RsocketService {
                             this._modelCodec
                         )
                     )
+            ),
+            catchError((error: any, caught: Observable<Product>) =>
+                throwError(() => new Error('An error occured !'))
             )
         );
     }
